@@ -235,5 +235,6 @@ class App(tk.Tk):
         self.mainloop()
 
 
+
 app = App("Launcher", "./icon.ico")
 app() # run
