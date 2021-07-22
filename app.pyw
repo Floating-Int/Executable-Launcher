@@ -99,6 +99,11 @@ class App(tk.Tk):
         # background color
         self.config(bg="#252525")
 
+        # dummy widget. used to make space between top and widgets
+        self.dummy_entry = tk.Label(self, bg="#252525")
+        # "display" widget
+        self.dummy_entry.pack()
+
         # -- menus --
         self.menubar = tk.Menu(self)
         self.config(menu=self.menubar)
@@ -134,14 +139,14 @@ class App(tk.Tk):
         self.input_field_name = InputField(self, "Enter name:", submit, False) # name field
         self.input_field_path = InputField(self, "Enter path:", submit, False) # path field
         self.menubar.add_command(label="Add", command=lambda: ( # multiple function calls with lambda
+            # hide
+            self.hide_all(),
+            # show
             self.input_field_name.pack(),
             self.input_field_path.pack(),
             # reset placeholders
             self.input_field_name.reset(),
-            self.input_field_path.reset(),
-            # hide other
-            self.input_name_edit.pack_forget(),
-            self.input_path_edit.pack_forget()
+            self.input_field_path.reset()
         ))
         
         # config meny
@@ -170,8 +175,7 @@ class App(tk.Tk):
                 self.input_name_edit.reset()
                 self.input_path_edit.reset()
                 # hide
-                self.input_name_edit.pack_forget()
-                self.input_path_edit.pack_forget()
+                self.hide_all()
         # init sub menu
         self.config_menu = tk.Menu(self.menubar, tearoff=0)
         for app, path in self.data.items():
@@ -181,6 +185,22 @@ class App(tk.Tk):
         # init input fields
         self.input_name_edit = InputField(self, "Enter name:", submit_config, False, False, False) # name field
         self.input_path_edit = InputField(self, "Enter path:", submit_config, False, False, False) # path field
+        def delete_shortcut(): # '_on_click' command
+            # remove old one
+            index = list(self.data.keys()).index(self.edit_name)
+            self.app_menu.delete(index)
+            self.config_menu.delete(index)
+            # change data
+            del self.data[self.edit_name] # deletes key:value of old name:path
+            self.save_data() # save data to .json
+            self.save_data()
+            # idk
+            self.delete_button.reset()
+            # hide
+            self.hide_all()
+        # init delete button ( use InputField as button)
+        self.delete_button = InputField(self, "Delete current")
+        self.delete_button._on_clicked = delete_shortcut # replace privat
         self.menubar.add_cascade(label="Config", menu=self.config_menu)
 
         # hide command
@@ -191,7 +211,7 @@ class App(tk.Tk):
     def launch(self, program_path): # launch a .exe file
         print("Launched")
         self.hide_all() # hides all input fields
-        if not os.path.exists(program_path):
+        if not os.path.exists(program_path) or not program_path.endswith(".exe"):
             return
         self.withdraw() # hide
         #subprocess.Popen([program_path])
@@ -206,12 +226,12 @@ class App(tk.Tk):
 
     def edit(self, tuple): # used in config menu
         name, path = tuple # unpack
+        # hide all
+        self.hide_all()
         # show input fields
         self.input_name_edit.pack()
         self.input_path_edit.pack()
-        # hide other
-        self.input_field_name.pack_forget()
-        self.input_field_path.pack_forget()
+        self.delete_button.pack()
         # set placeholders
         self.input_name_edit.placeholder = name
         self.input_path_edit.placeholder = path
@@ -223,12 +243,12 @@ class App(tk.Tk):
         self.edit_path = path
     
 
-    def hide_all(self): # hides all input fields
-        self.input_field_name.pack_forget(),
-        self.input_field_path.pack_forget(),
-        self.input_name_edit.pack_forget(),
+    def hide_all(self): # hides all widgets
+        self.input_field_name.pack_forget()
+        self.input_field_path.pack_forget()
+        self.input_name_edit.pack_forget()
         self.input_path_edit.pack_forget()
-        self.focus() # take focus of input fields
+        self.delete_button.pack_forget()
 
 
     def __call__(self) -> None:
